@@ -19,9 +19,6 @@ const useMatrixRain = ({ config, asciiConfig }: MatrixRainProps) => {
     height: window.innerHeight,
   });
 
-  const lineHeight = asciiConfig.fontSize * 1.5;
-  const totalLines = Math.floor(dimensions.height / lineHeight);
-
   useEffect(() => {
     const handleResize = () => {
       setDimensions({
@@ -35,18 +32,11 @@ const useMatrixRain = ({ config, asciiConfig }: MatrixRainProps) => {
   }, []);
 
   const createRaindrop = useCallback(() => {
-    // const x = Math.random() * dimensions.width;
-
-    const columns = Math.floor(dimensions.width / asciiConfig.charWidth);
-    const column = Math.floor(Math.random() * columns);
-    const x = column * asciiConfig.charWidth;
-
+    const x = Math.random() * dimensions.width;
     return {
       x,
       y: 0,
-      lineIndex: 0,
-      // speed: (1 + Math.random()) * config.speed,
-      lastDropTime: performance.now(),
+      speed: (1 + Math.random()) * config.speed,
       text: config.text,
       opacity: 0.8 + Math.random() * 0.2,
     };
@@ -56,13 +46,11 @@ const useMatrixRain = ({ config, asciiConfig }: MatrixRainProps) => {
     if (!config.text) return;
 
     const initialDrops: RainDrop[] = [];
-    const dropCount = Math.floor((dimensions.width / asciiConfig.charWidth) * config.density);
+    const dropCount = Math.floor((dimensions.width / 10) * config.density);
 
     for (let i = 0; i < dropCount; i++) {
       const drop = createRaindrop();
-      drop.lineIndex = Math.floor(Math.random() * totalLines);
-      drop.y = drop.lineIndex * lineHeight;
-      // drop.y = Math.random() * dimensions.height;
+      drop.y = Math.random() * dimensions.height;
       initialDrops.push(drop);
     }
 
@@ -83,20 +71,13 @@ const useMatrixRain = ({ config, asciiConfig }: MatrixRainProps) => {
 
       let overlapping = false;
 
-          // Calculate drop interval based on speed (inverse relationship)
-      const dropInterval = 1000 - (1 + Math.random()) * config.speed * 90; // 100ms to 1000ms range
-
       const updatedRaindrops = raindrops
         .map((drop) => {
-          const timeSinceLastDrop = timestamp - drop.lastDropTime;
-          const updatedDrop = { ...drop };
-
-          // Move drop to next line if enough time has passed
-          if (timeSinceLastDrop >= dropInterval) {
-            updatedDrop.lineIndex++;
-            updatedDrop.y = updatedDrop.lineIndex * lineHeight;
-            updatedDrop.lastDropTime = timestamp;
-          }
+          const updatedDrop = {
+            ...drop,
+            y: drop.y + drop.speed,
+            opacity: drop.y < 0 ? (drop.y + drop.speed) / 20 : drop.opacity,
+          };
 
           if (
             isOverlappingAsciiArt(
@@ -111,7 +92,7 @@ const useMatrixRain = ({ config, asciiConfig }: MatrixRainProps) => {
           }
 
           // Render character
-          ctx.font = "14px monospace";
+          ctx.font = '14px monospace';
           ctx.fillStyle = `rgba(${parseInt(config.color.slice(1, 3), 16)}, 
                             ${parseInt(config.color.slice(3, 5), 16)}, 
                             ${parseInt(config.color.slice(5, 7), 16)}, 
@@ -145,7 +126,7 @@ const useMatrixRain = ({ config, asciiConfig }: MatrixRainProps) => {
         }
       });
 
-      if (timestamp - lastDropTime.current > (50 / config.density) ) {
+      if (timestamp - lastDropTime.current > 50 / config.density) {
         updatedRaindrops.push(createRaindrop());
         lastDropTime.current = timestamp;
       }

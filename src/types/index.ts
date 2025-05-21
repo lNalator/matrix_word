@@ -1,9 +1,9 @@
 export interface RainDrop {
   x: number;
   y: number;
-  lineIndex: number;
-  lastDropTime: number;
-  // speed: number;
+  // lineIndex: number;
+  // lastDropTime: number;
+  speed: number;
   text: string;
   opacity: number;
 }
